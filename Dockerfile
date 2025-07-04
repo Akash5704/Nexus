@@ -1,9 +1,9 @@
 FROM ubuntu:22.04
 
-# Install system dependencies
+# Install dependencies
 RUN apt update && \
     apt upgrade -y && \
-    apt install -y curl build-essential pkg-config libssl-dev git protobuf-compiler wget unzip
+    apt install -y curl git build-essential pkg-config libssl-dev protobuf-compiler wget unzip
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs  | sh -s -- -y
@@ -12,17 +12,13 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Add RISC-V target
 RUN rustup target add riscv32i-unknown-none-elf
 
-# Create directory for Nexus
-RUN mkdir -p /root/.nexus/bin
+# Clone and build nexus-cli from source
+RUN mkdir -p /root/nexus && cd /root/nexus && \
+    git clone https://github.com/nexus-xyz/nexus-cli.git  . && \
+    cargo build --release
 
-# Download the Nexus binary (amd64 version for Linux)
-RUN curl -Lo /root/.nexus/bin/nexus https://github.com/nexus-xyz/nexus-cli/releases/latest/download/nexus-linux-amd64 
+# Symlink binary into PATH
+RUN ln -s /root/nexus/target/release/nexus-cli /usr/local/bin/nexus
 
-# Make it executable
-RUN chmod +x /root/.nexus/bin/nexus
-
-# Add to PATH
-ENV PATH="/root/.nexus/bin:${PATH}"
-
-# Start the node
-CMD ["nexus", "network", "start", "--node-id", "your-node-id"]
+# Start node
+CMD ["sh", "-c", "nexus network start --node-id your-node-id && tail -f /dev/null"]
