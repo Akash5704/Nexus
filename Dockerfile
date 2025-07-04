@@ -12,11 +12,17 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Add RISC-V target
 RUN rustup target add riscv32i-unknown-none-elf
 
-# Download Nexus CLI directly
+# Create directory for Nexus
 RUN mkdir -p /root/.nexus/bin
+
+# Download the Nexus binary (amd64 version for Linux)
 RUN curl -Lo /root/.nexus/bin/nexus https://github.com/nexus-xyz/nexus-cli/releases/latest/download/nexus-linux-amd64 
+
+# Make it executable
 RUN chmod +x /root/.nexus/bin/nexus
+
+# Add to PATH
 ENV PATH="/root/.nexus/bin:${PATH}"
 
 # Start the node
-CMD ["sh", "-c", "nexus-network start --node-id 11874082 && tail -f /dev/null"]
+CMD ["nexus", "network", "start", "--node-id", "your-node-id"]
